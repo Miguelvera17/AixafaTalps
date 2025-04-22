@@ -5,6 +5,7 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Array;
@@ -88,8 +89,9 @@ public class GameScreen implements Screen {
         }
 
         public boolean estaVisible() {
-            return topoVisible && (TimeUtils.nanoTime() - tiempoInicioVisibilidad) < duracionVisibilidad * 1000000000L;
+            return topoVisible;
         }
+
 
         public boolean contiene(float touchX, float touchY) {
             if (topoSprite == null) return false;
@@ -125,23 +127,23 @@ public class GameScreen implements Screen {
         float anchoCeldaEnPantalla = anchoCeldaOriginal * escalaX;
         float altoCeldaEnPantalla = altoCeldaOriginal * escalaY;
 
-        coordenadasConocidas.put("1-1", new float[]{450f, 40f});
-        coordenadasConocidas.put("1-2", new float[]{750f, 40f});
-        coordenadasConocidas.put("1-3", new float[]{1050f, 40f});
+        coordenadasConocidas.put("1-1", new float[]{380f, 40f});
+        coordenadasConocidas.put("1-2", new float[]{700f, 40f});
+        coordenadasConocidas.put("1-3", new float[]{1020f, 40f});
         coordenadasConocidas.put("1-4", new float[]{1350f, 40f});
         coordenadasConocidas.put("1-5", new float[]{1650f, 40f});
-        coordenadasConocidas.put("1-6", new float[]{1950f, 40f});
-        coordenadasConocidas.put("1-7", new float[]{2250f, 40f});
-        coordenadasConocidas.put("1-8", new float[]{2550f, 40f});
+        coordenadasConocidas.put("1-6", new float[]{1980f, 40f});
+        coordenadasConocidas.put("1-7", new float[]{2300f, 40f});
+        coordenadasConocidas.put("1-8", new float[]{2620f, 40f});
 
-        coordenadasConocidas.put("2-1", new float[]{450f, 190f});
-        coordenadasConocidas.put("2-2", new float[]{750f, 190f});
-        coordenadasConocidas.put("2-3", new float[]{1050f, 190f});
+        coordenadasConocidas.put("2-1", new float[]{420f, 190f});
+        coordenadasConocidas.put("2-2", new float[]{730f, 190f});
+        coordenadasConocidas.put("2-3", new float[]{1040f, 190f});
         coordenadasConocidas.put("2-4", new float[]{1350f, 190f});
         coordenadasConocidas.put("2-5", new float[]{1650f, 190f});
-        coordenadasConocidas.put("2-6", new float[]{1950f, 190f});
-        coordenadasConocidas.put("2-7", new float[]{2250f, 190f});
-        coordenadasConocidas.put("2-8", new float[]{2550f, 190f});
+        coordenadasConocidas.put("2-6", new float[]{1960f, 190f});
+        coordenadasConocidas.put("2-7", new float[]{2270f, 190f});
+        coordenadasConocidas.put("2-8", new float[]{2580f, 190f});
 
         coordenadasConocidas.put("3-1", new float[]{450f, 340f});
         coordenadasConocidas.put("3-2", new float[]{750f, 340f});
@@ -215,23 +217,44 @@ public class GameScreen implements Screen {
         }
 
         CharSequence str = "Puntuación: " + puntuacion;
-        font.draw(game.batch, str, 20, Gdx.graphics.getHeight() - 20);
+        font.getData().setScale(4f); // Más grande
+
+        GlyphLayout layout = new GlyphLayout();
+        layout.setText(font, str);
+
+        float x = (Gdx.graphics.getWidth() - layout.width) / 2f; // Centrado
+        float y = Gdx.graphics.getHeight() * 0.85f; // Un poco más abajo
+
+        font.draw(game.batch, layout, x, y);
+
 
         game.batch.end();
 
-        if (agujeroActivo == null && TimeUtils.nanoTime() - ultimoTiempoAparicion > tiempoEntreApariciones * 1000000000L) {
+        // Mostrar nuevo topo si ha pasado el tiempo
+        if (TimeUtils.nanoTime() - ultimoTiempoAparicion > tiempoEntreApariciones * 1000000000L) {
             ultimoTiempoAparicion = TimeUtils.nanoTime();
+
+            // Elegir un agujero al azar
             int indiceAleatorio = random.nextInt(agujeros.size);
-            agujeroActivo = agujeros.get(indiceAleatorio);
-            agujeroActivo.mostrarTopo();
+            Agujero agujeroAleatorio = agujeros.get(indiceAleatorio);
+
+            // Ocultar todos los topos antes de mostrar uno nuevo
+            for (Agujero a : agujeros) {
+                a.ocultarTopo();
+            }
+
+            // Mostrar nuevo topo
+            agujeroAleatorio.mostrarTopo();
+            agujeroActivo = agujeroAleatorio;
         }
 
-        if (agujeroActivo != null && agujeroActivo.estaVisible() && (TimeUtils.nanoTime() - agujeroActivo.tiempoInicioVisibilidad) > agujeroActivo.duracionVisibilidad * 1000000000L) {
-            agujeroActivo.ocultarTopo();
-            agujeroActivo = null;
-        } else if (agujeroActivo != null && !agujeroActivo.estaVisible() && !agujeroActivo.topoAplastado) {
-            agujeroActivo = null;
+        // Verificar si el topo activo debe desaparecer por tiempo
+        if (agujeroActivo != null && agujeroActivo.topoVisible) {
+            if (TimeUtils.nanoTime() - agujeroActivo.tiempoInicioVisibilidad > agujeroActivo.duracionVisibilidad * 1000000000L) {
+                agujeroActivo.ocultarTopo();
+            }
         }
+
     }
 
     @Override
@@ -268,3 +291,5 @@ public class GameScreen implements Screen {
         font.dispose();
     }
 }
+
+
