@@ -58,6 +58,7 @@ public class GameScreen implements Screen {
 
         public void mostrarTopo() {
             topoSprite = new Sprite(topoTextura);
+            topoSprite.setSize(topoSprite.getWidth() * 0.5f, topoSprite.getHeight() * 0.5f);
             topoSprite.setCenter(xCentro, yCentro + altoAgujeroEnPantalla * 0.3f);
             topoVisible = true;
             topoAplastado = false;
@@ -124,9 +125,34 @@ public class GameScreen implements Screen {
         float anchoCeldaEnPantalla = anchoCeldaOriginal * escalaX;
         float altoCeldaEnPantalla = altoCeldaOriginal * escalaY;
 
-        coordenadasConocidas.put("2-4", new float[]{682f * escalaX, altoPantalla - (812f * escalaY)});
-        coordenadasConocidas.put("2-5", new float[]{840f * escalaX, altoPantalla - (812f * escalaY)});
-        coordenadasConocidas.put("1-4", new float[]{682f * escalaX, altoPantalla - (707f * escalaY)});
+        coordenadasConocidas.put("1-1", new float[]{450f, 40f});
+        coordenadasConocidas.put("1-2", new float[]{750f, 40f});
+        coordenadasConocidas.put("1-3", new float[]{1050f, 40f});
+        coordenadasConocidas.put("1-4", new float[]{1350f, 40f});
+        coordenadasConocidas.put("1-5", new float[]{1650f, 40f});
+        coordenadasConocidas.put("1-6", new float[]{1950f, 40f});
+        coordenadasConocidas.put("1-7", new float[]{2250f, 40f});
+        coordenadasConocidas.put("1-8", new float[]{2550f, 40f});
+
+        coordenadasConocidas.put("2-1", new float[]{450f, 190f});
+        coordenadasConocidas.put("2-2", new float[]{750f, 190f});
+        coordenadasConocidas.put("2-3", new float[]{1050f, 190f});
+        coordenadasConocidas.put("2-4", new float[]{1350f, 190f});
+        coordenadasConocidas.put("2-5", new float[]{1650f, 190f});
+        coordenadasConocidas.put("2-6", new float[]{1950f, 190f});
+        coordenadasConocidas.put("2-7", new float[]{2250f, 190f});
+        coordenadasConocidas.put("2-8", new float[]{2550f, 190f});
+
+        coordenadasConocidas.put("3-1", new float[]{450f, 340f});
+        coordenadasConocidas.put("3-2", new float[]{750f, 340f});
+        coordenadasConocidas.put("3-3", new float[]{1050f, 340f});
+        coordenadasConocidas.put("3-4", new float[]{1350f, 340f});
+        coordenadasConocidas.put("3-5", new float[]{1650f, 340f});
+        coordenadasConocidas.put("3-6", new float[]{1950f, 340f});
+        coordenadasConocidas.put("3-7", new float[]{2250f, 340f});
+        coordenadasConocidas.put("3-8", new float[]{2550f, 340f});
+
+
 
         for (int fila = 0; fila < NUM_FILAS; fila++) {
             for (int columna = 0; columna < NUM_COLUMNAS; columna++) {
