@@ -59,7 +59,7 @@ public class GameScreen implements Screen {
 
         public void mostrarTopo() {
             topoSprite = new Sprite(topoTextura);
-            topoSprite.setSize(topoSprite.getWidth() * 0.5f, topoSprite.getHeight() * 0.5f);
+            topoSprite.setSize(topoSprite.getWidth() * 0.7f, topoSprite.getHeight() * 0.65f);
             topoSprite.setCenter(xCentro, yCentro + altoAgujeroEnPantalla * 0.3f);
             topoVisible = true;
             topoAplastado = false;
