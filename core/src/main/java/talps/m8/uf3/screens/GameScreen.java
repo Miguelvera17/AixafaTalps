@@ -1,21 +1,17 @@
 package talps.m8.uf3.screens;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.utils.*;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.TimeUtils;
-import java.util.Random;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import talps.m8.uf3.AixafaTalps;
+import talps.m8.uf3.objects.Agujero;
+import talps.m8.uf3.objects.Martillo;
+import talps.m8.uf3.utils.Settings;
+
 
 public class GameScreen implements Screen {
     final AixafaTalps game;
@@ -23,85 +19,24 @@ public class GameScreen implements Screen {
     Texture topoTextura;
     Texture topoAplastadoTextura;
     Texture martilloTextura;
+
     Array<Agujero> agujeros;
     Random random = new Random();
-    float tiempoEntreApariciones = 1.5f;
+    float tiempoEntreApariciones = Settings.TIEMPO_ENTRE_APARICIONES;
     long ultimoTiempoAparicion = 0;
     Agujero agujeroActivo = null;
-    Sprite martilloSprite;
-    boolean martilloVisible = false;
-    long tiempoInicioMartillo;
-    float duracionMartillo = 0.2f;
+
+    Martillo martillo;
     int puntuacion = 0;
     BitmapFont font;
 
-    private static final int NUM_FILAS = 3;
-    private static final int NUM_COLUMNAS = 8;
+    private static final int NUM_FILAS = Settings.NUM_FILAS;
+    private static final int NUM_COLUMNAS = Settings.NUM_COLUMNAS;
+    private float tiempoRestante = Settings.tiempoRestante;
+    private boolean juegoActivo = true;
+
 
     private final Map<String, float[]> coordenadasConocidas = new HashMap<>();
-
-    public class Agujero {
-        float xCentro, yCentro;
-        Sprite topoSprite;
-        boolean topoVisible = false;
-        long tiempoInicioVisibilidad;
-        float duracionVisibilidad = 1.0f;
-        float anchoAgujeroEnPantalla; // Declaración
-        float altoAgujeroEnPantalla; // Declaración
-        boolean topoAplastado = false;
-
-        public Agujero(float xCentro, float yCentro, float anchoAgujeroEnPantalla, float altoAgujeroEnPantalla) {
-            this.xCentro = xCentro;
-            this.yCentro = yCentro;
-            this.anchoAgujeroEnPantalla = anchoAgujeroEnPantalla; // Asignación
-            this.altoAgujeroEnPantalla = altoAgujeroEnPantalla; // Asignación
-        }
-
-        public void mostrarTopo() {
-            topoSprite = new Sprite(topoTextura);
-            topoSprite.setSize(topoSprite.getWidth() * 0.7f, topoSprite.getHeight() * 0.65f);
-            topoSprite.setCenter(xCentro, yCentro + altoAgujeroEnPantalla * 0.3f);
-            topoVisible = true;
-            topoAplastado = false;
-            tiempoInicioVisibilidad = TimeUtils.nanoTime();
-        }
-
-        public void ocultarTopo() {
-            topoVisible = false;
-            topoSprite = null;
-            topoAplastado = false;
-        }
-
-        public void aplastarTopo() {
-            if (topoVisible && topoSprite != null && !topoAplastado) {
-                topoSprite.setTexture(topoAplastadoTextura);
-                topoAplastado = true;
-                mostrarMartillo(topoSprite.getX() + topoSprite.getWidth() / 2f, topoSprite.getY() + topoSprite.getHeight() / 2f);
-                topoVisible = false;
-                puntuacion++;
-            }
-        }
-
-        public void render(SpriteBatch batch) {
-            if (topoSprite != null) {
-                topoSprite.draw(batch);
-            }
-        }
-
-        public boolean estaVisible() {
-            return topoVisible;
-        }
-
-
-        public boolean contiene(float touchX, float touchY) {
-            if (topoSprite == null) return false;
-            float spriteMinX = topoSprite.getX();
-            float spriteMaxX = spriteMinX + topoSprite.getWidth();
-            float spriteMinY = topoSprite.getY();
-            float spriteMaxY = spriteMinY + topoSprite.getHeight();
-            return touchX > spriteMinX && touchX < spriteMaxX && touchY > spriteMinY && touchY < spriteMaxY;
-        }
-    }
 
     public GameScreen(final AixafaTalps game) {
         this.game = game;
@@ -109,9 +44,14 @@ public class GameScreen implements Screen {
         topoTextura = new Texture(Gdx.files.internal("topo.png"));
         topoAplastadoTextura = new Texture(Gdx.files.internal("topoAplastado.png"));
         martilloTextura = new Texture(Gdx.files.internal("martillo.png"));
-        agujeros = new Array<>();
         font = new BitmapFont();
-        font.getData().setScale(2f);
+        font.getData().setScale(Settings.FUENTE_ESCALA_MENU);
+        agujeros = new Array<>();
+
+        martillo = new Martillo(martilloTextura);
+
+        // Inicializa posiciones personalizadas (igual que antes)
+        inicializarCoordenadas();
 
         float anchoPantalla = Gdx.graphics.getWidth();
         float altoPantalla = Gdx.graphics.getHeight();
@@ -121,12 +61,39 @@ public class GameScreen implements Screen {
         float escalaX = anchoPantalla / anchoFondoOriginal;
         float escalaY = altoPantalla / altoFondoOriginal;
 
-        float anchoCeldaOriginal = anchoFondoOriginal / NUM_COLUMNAS;
-        float altoCeldaOriginal = altoFondoOriginal / NUM_FILAS;
+        float anchoCelda = (anchoFondoOriginal / NUM_COLUMNAS) * escalaX;
+        float altoCelda = (altoFondoOriginal / NUM_FILAS) * escalaY;
 
-        float anchoCeldaEnPantalla = anchoCeldaOriginal * escalaX;
-        float altoCeldaEnPantalla = altoCeldaOriginal * escalaY;
+        for (int fila = 0; fila < NUM_FILAS; fila++) {
+            for (int col = 0; col < NUM_COLUMNAS; col++) {
+                String clave = (fila + 1) + "-" + (col + 1);
+                float[] coords = coordenadasConocidas.getOrDefault(clave,
+                    new float[]{(col + 0.5f) * anchoCelda, altoPantalla - ((fila + 0.5f) * altoCelda)});
+                agujeros.add(new Agujero(coords[0], coords[1], anchoCelda, altoCelda, topoTextura, topoAplastadoTextura));
+            }
+        }
 
+        Gdx.input.setInputProcessor(new InputAdapter() {
+            @Override
+            public boolean touchDown(int x, int y, int pointer, int button) {
+                float worldX = x;
+                float worldY = Gdx.graphics.getHeight() - y;
+
+                for (Agujero agujero : agujeros) {
+                    if (agujero.estaVisible() && agujero.contiene(worldX, worldY)) {
+                        agujero.aplastarTopo();
+                        puntuacion++;
+                        tiempoRestante += 5f;
+                        martillo.mostrar(worldX, worldY);
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+    }
+
+    private void inicializarCoordenadas() {
         coordenadasConocidas.put("1-1", new float[]{380f, 40f});
         coordenadasConocidas.put("1-2", new float[]{700f, 40f});
         coordenadasConocidas.put("1-3", new float[]{1020f, 40f});
@@ -153,134 +120,49 @@ public class GameScreen implements Screen {
         coordenadasConocidas.put("3-6", new float[]{1950f, 340f});
         coordenadasConocidas.put("3-7", new float[]{2250f, 340f});
         coordenadasConocidas.put("3-8", new float[]{2550f, 340f});
-
-
-
-        for (int fila = 0; fila < NUM_FILAS; fila++) {
-            for (int columna = 0; columna < NUM_COLUMNAS; columna++) {
-                float centroXPantalla;
-                float centroYPantalla;
-                String clave = (fila + 1) + "-" + (columna + 1);
-
-                if (coordenadasConocidas.containsKey(clave)) {
-                    float[] coords = coordenadasConocidas.get(clave);
-                    centroXPantalla = coords[0];
-                    centroYPantalla = coords[1];
-                } else {
-                    centroXPantalla = (columna + 0.5f) * anchoCeldaEnPantalla;
-                    centroYPantalla = altoPantalla - ((fila + 0.5f) * altoCeldaEnPantalla);
-                }
-                agujeros.add(new Agujero(centroXPantalla, centroYPantalla, anchoCeldaEnPantalla, altoCeldaEnPantalla)); // ¡Ahora se pasan las dimensiones!
-            }
-        }
-
-        Gdx.input.setInputProcessor(new InputAdapter() {
-            @Override
-            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                float worldX = screenX;
-                float worldY = Gdx.graphics.getHeight() - screenY;
-
-                for (Agujero agujero : agujeros) {
-                    if (agujero.estaVisible() && agujero.contiene(worldX, worldY)) {
-                        agujero.aplastarTopo();
-                        return true;
-                    }
-                }
-                return false;
-            }
-        });
-    }
-
-    private void mostrarMartillo(float x, float y) {
-        martilloSprite = new Sprite(martilloTextura);
-        martilloSprite.setCenter(x, y);
-        martilloVisible = true;
-        tiempoInicioMartillo = TimeUtils.nanoTime();
     }
 
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 1, 0, 1);
-
         game.batch.begin();
         game.batch.draw(fondoTextura, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        for (Agujero agujero : agujeros) {
-            agujero.render(game.batch);
-        }
+        for (Agujero agujero : agujeros) agujero.render(game.batch);
 
-        if (martilloVisible && (TimeUtils.nanoTime() - tiempoInicioMartillo) < duracionMartillo * 1000000000L) {
-            martilloSprite.draw(game.batch);
-        } else {
-            martilloVisible = false;
-            martilloSprite = null;
-        }
+        martillo.render(game.batch);
 
-        CharSequence str = "Puntuación: " + puntuacion;
-        font.getData().setScale(4f); // Más grande
-
-        GlyphLayout layout = new GlyphLayout();
-        layout.setText(font, str);
-
-        float x = (Gdx.graphics.getWidth() - layout.width) / 2f; // Centrado
-        float y = Gdx.graphics.getHeight() * 0.85f; // Un poco más abajo
-
-        font.draw(game.batch, layout, x, y);
-
+        font.getData().setScale(Settings.FUENTE_ESCALA_JUEGO);        GlyphLayout layout = new GlyphLayout(font, "Puntuación: " + puntuacion);
+        font.draw(game.batch, layout, (Gdx.graphics.getWidth() - layout.width) / 2f, Gdx.graphics.getHeight() * 0.85f);
+        GlyphLayout tiempoLayout = new GlyphLayout(font, "Tiempo: " + (int)tiempoRestante);
+        font.draw(game.batch, tiempoLayout, (Gdx.graphics.getWidth() - tiempoLayout.width) / 2f, Gdx.graphics.getHeight() * 0.9f);
 
         game.batch.end();
+        if (juegoActivo) {
+            tiempoRestante -= delta;
+            if (tiempoRestante <= 0) {
+                tiempoRestante = 0;
+                juegoActivo = false;
+                for (Agujero a : agujeros) a.ocultarTopo();
+            }
+        }
 
-        // Mostrar nuevo topo si ha pasado el tiempo
-        if (TimeUtils.nanoTime() - ultimoTiempoAparicion > tiempoEntreApariciones * 1000000000L) {
+
+        if (juegoActivo && TimeUtils.nanoTime() - ultimoTiempoAparicion > tiempoEntreApariciones * 1_000_000_000L) {
             ultimoTiempoAparicion = TimeUtils.nanoTime();
-
-            // Elegir un agujero al azar
-            int indiceAleatorio = random.nextInt(agujeros.size);
-            Agujero agujeroAleatorio = agujeros.get(indiceAleatorio);
-
-            // Ocultar todos los topos antes de mostrar uno nuevo
-            for (Agujero a : agujeros) {
-                a.ocultarTopo();
-            }
-
-            // Mostrar nuevo topo
-            agujeroAleatorio.mostrarTopo();
-            agujeroActivo = agujeroAleatorio;
+            for (Agujero a : agujeros) a.ocultarTopo();
+            agujeroActivo = agujeros.get(random.nextInt(agujeros.size));
+            agujeroActivo.mostrarTopo();
         }
 
-        // Verificar si el topo activo debe desaparecer por tiempo
-        if (agujeroActivo != null && agujeroActivo.topoVisible) {
-            if (TimeUtils.nanoTime() - agujeroActivo.tiempoInicioVisibilidad > agujeroActivo.duracionVisibilidad * 1000000000L) {
-                agujeroActivo.ocultarTopo();
-            }
-        }
-
+        if (agujeroActivo != null && agujeroActivo.expirado()) agujeroActivo.ocultarTopo();
     }
 
-    @Override
-    public void resize(int width, int height) {
-        // Manejar el redimensionamiento
-    }
-
-    @Override
-    public void show() {
-        // Se llama al mostrar
-    }
-
-    @Override
-    public void hide() {
-        // Se llama al ocultar
-    }
-
-    @Override
-    public void pause() {
-        // Se llama al pausar
-    }
-
-    @Override
-    public void resume() {
-        // Se llama al reanudar
-    }
+    @Override public void resize(int w, int h) {}
+    @Override public void show() {}
+    @Override public void hide() {}
+    @Override public void pause() {}
+    @Override public void resume() {}
 
     @Override
     public void dispose() {
@@ -291,5 +173,3 @@ public class GameScreen implements Screen {
         font.dispose();
     }
 }
-
-

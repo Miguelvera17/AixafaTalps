@@ -3,7 +3,7 @@ package talps.m8.uf3;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
-import talps.m8.uf3.screens.GameScreen;
+import talps.m8.uf3.screens.StartScreen;
 
 public class AixafaTalps extends Game {
     public SpriteBatch batch;
@@ -11,12 +11,12 @@ public class AixafaTalps extends Game {
     @Override
     public void create() {
         batch = new SpriteBatch();
-        this.setScreen(new GameScreen(this));
+        this.setScreen(new StartScreen(this));
     }
 
     @Override
     public void render() {
-        super.render(); // Llama al método render de la pantalla activa
+        super.render();
     }
 
     @Override
