@@ -144,6 +144,9 @@ public class GameScreen implements Screen {
                 tiempoRestante = 0;
                 juegoActivo = false;
                 for (Agujero a : agujeros) a.ocultarTopo();
+                // Transición a GameOverScreen
+                game.setScreen(new GameOverScreen(game));
+                dispose();
             }
         }
 

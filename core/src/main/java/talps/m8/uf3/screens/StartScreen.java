@@ -13,11 +13,12 @@ public class StartScreen implements Screen {
     Texture fondoTextura;
     Sprite fondoSprite;
 
-    float alpha = 1f;
-    float fadeSpeed = 0.6f; // Más lento para alargar la transición
-    float zoom = 1f;
-    float zoomSpeed = 0.008f; // Más lento y progresivo
+    float alpha = 0f;
+    float fadeSpeedIn = 2.0f;
 
+    float fadeOutAlpha = 0f;
+    float fadeOutSpeed = 3.0f;
+    boolean touched = false;
     boolean fadingOut = false;
     boolean transitioning = false;
 
@@ -26,12 +27,21 @@ public class StartScreen implements Screen {
         fondoTextura = new Texture(Gdx.files.internal("fondoInicial.png"));
         fondoSprite = new Sprite(fondoTextura);
         fondoSprite.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-        fondoSprite.setOrigin(fondoSprite.getWidth() / 2, fondoSprite.getHeight() / 2); // Origen al centro
+
+        // Transición automática después de 3 segundos
+        Timer.schedule(new Timer.Task() {
+            @Override
+            public void run() {
+                if (!fadingOut && !transitioning) {
+                    fadingOut = true;
+                }
+            }
+        }, 3f);
 
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                if (!fadingOut) fadingOut = true;
+                touched = true;
                 return true;
             }
         });
@@ -41,43 +51,37 @@ public class StartScreen implements Screen {
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
 
-        if (!fadingOut && alpha > 0) {
-            alpha -= delta * fadeSpeed;
+        if (alpha < 1f) {
+            alpha += delta * fadeSpeedIn;
+            if (alpha > 1f) alpha = 1f;
+        }
+
+        if (touched && !fadingOut) {
+            fadingOut = true;
         }
 
         if (fadingOut) {
-            alpha += delta * fadeSpeed;
-            zoom += delta * zoomSpeed * 4f;
-
-            if (!transitioning && alpha >= 1f) {
+            fadeOutAlpha += delta * fadeOutSpeed;
+            if (!transitioning && fadeOutAlpha >= 1f) {
                 transitioning = true;
-
-                // Espera 0.5 segundos más antes de cambiar de pantalla (opcional)
                 Timer.schedule(new Timer.Task() {
                     @Override
                     public void run() {
-                        game.setScreen(new GameScreen(game));
+                        game.setScreen(new PressStartScreen(game));
                         dispose();
                     }
-                }, 0.5f);
+                }, 0.1f);
             }
         }
 
-
         game.batch.begin();
 
-        fondoSprite.setScale(zoom);
-
-        // Centrar sprite respecto al centro real de la pantalla
-        float centerX = Gdx.graphics.getWidth() / 2f;
-        float centerY = Gdx.graphics.getHeight() / 2f;
-        fondoSprite.setPosition(centerX - fondoSprite.getOriginX() * zoom,
-            centerY - fondoSprite.getOriginY() * zoom);
-
+        fondoSprite.setColor(1, 1, 1, alpha);
+        fondoSprite.setPosition(0, 0);
         fondoSprite.draw(game.batch);
 
-        // Capa negra gradual
-        game.batch.setColor(0, 0, 0, alpha);
+        // Capa negra encima para efecto de salida
+        game.batch.setColor(0, 0, 0, fadeOutAlpha);
         game.batch.draw(fondoTextura, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         game.batch.setColor(1, 1, 1, 1);
 
