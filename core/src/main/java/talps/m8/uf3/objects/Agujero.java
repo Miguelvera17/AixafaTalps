@@ -14,7 +14,8 @@ public class Agujero {
     private boolean aplastado = false;
     private long tiempoVisible;
     private long tiempoAparecer;
-    boolean esBomba;// ← Nuevo
+    boolean esBomba;
+    private boolean esCorazon = false;
 
     private float alpha = Settings.ALPHA;
     private final float DURACION_FADE_IN = Settings.DURACION_FADE_IN;
@@ -81,15 +82,34 @@ public class Agujero {
         return visible && (TimeUtils.nanoTime() - tiempoVisible > Settings.TOPO_DURACION_VISIBLE * 1_000_000_000L);
     }
 
-    public void configurarTipo(boolean esBomba, Texture normal, Texture aplastado) {
+    public void configurarTipo(boolean esBomba, boolean esCorazon, Texture topo, Texture topoAplastado) {
         this.esBomba = esBomba;
-        this.topoTextura = normal;
-        this.topoAplastadoTextura = aplastado;
+        this.esCorazon = esCorazon;
+        this.topoTextura= topo;
+        this.topoAplastadoTextura = topoAplastado;
     }
+
+    public Texture getTextura() {
+        return topoTextura;
+    }
+
+    public boolean esCorazon() {
+        return esCorazon;
+    }
+
 
     public boolean esBomba() {
         return esBomba;
     }
+
+    public float getX() {
+        return x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
 
 
 }
