@@ -20,7 +20,7 @@ public class Settings {
     public static final int NUM_FILAS = 3;
     public static final int NUM_COLUMNAS = 8;
     public static final float TIEMPO_ENTRE_APARICIONES = 1.5f;
-    public static float tiempoRestante = 30f;
+    public static float tiempoRestante = 5f;
 
     // Escalado fuente
     public static final float FUENTE_ESCALA_MENU = 2f;

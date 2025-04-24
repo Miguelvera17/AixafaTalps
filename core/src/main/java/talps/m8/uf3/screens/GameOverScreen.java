@@ -7,11 +7,16 @@ import com.badlogic.gdx.utils.ScreenUtils;
 
 import talps.m8.uf3.AixafaTalps;
 
+import com.badlogic.gdx.audio.Sound;
+
+import com.badlogic.gdx.audio.Music;
+
 public class GameOverScreen implements Screen {
     final AixafaTalps game;
     Texture fondoTextura;
     BitmapFont font;
     GlyphLayout layout;
+    Music introMusic;
 
     float blinkAlpha = 1f;
     float blinkTimer = 0f;
@@ -27,6 +32,10 @@ public class GameOverScreen implements Screen {
 
         layout = new GlyphLayout();
 
+        introMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/intro2.ogg"));
+        introMusic.setLooping(true); // Opcional: haz que la música se repita
+        introMusic.setVolume(0.5f);  // Opcional: ajusta el volumen (0.0 - 1.0)
+
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
@@ -35,6 +44,11 @@ public class GameOverScreen implements Screen {
                 return true;
             }
         });
+    }
+
+    @Override
+    public void show() {
+        introMusic.play();
     }
 
     @Override
@@ -58,7 +72,6 @@ public class GameOverScreen implements Screen {
         game.batch.end();
     }
 
-    @Override public void show() {}
     @Override public void resize(int width, int height) {}
     @Override public void pause() {}
     @Override public void resume() {}
@@ -68,5 +81,6 @@ public class GameOverScreen implements Screen {
     public void dispose() {
         fondoTextura.dispose();
         font.dispose();
+        introMusic.dispose();
     }
 }

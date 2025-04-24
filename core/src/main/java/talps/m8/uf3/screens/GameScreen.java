@@ -10,6 +10,7 @@ import java.util.*;
 import talps.m8.uf3.AixafaTalps;
 import talps.m8.uf3.objects.Agujero;
 import talps.m8.uf3.objects.Martillo;
+import talps.m8.uf3.objects.TextoFlotante;
 import talps.m8.uf3.utils.Settings;
 
 
@@ -19,12 +20,19 @@ public class GameScreen implements Screen {
     Texture topoTextura;
     Texture topoAplastadoTextura;
     Texture martilloTextura;
+    Texture topoBombaTextura;
+    Texture topoBombaAplastadoTextura;
+
 
     Array<Agujero> agujeros;
+    List<TextoFlotante> textosFlotantes = new ArrayList<>();
+
     Random random = new Random();
     float tiempoEntreApariciones = Settings.TIEMPO_ENTRE_APARICIONES;
     long ultimoTiempoAparicion = 0;
     Agujero agujeroActivo = null;
+    int ultimoNivelAcelerado = 0;
+
 
     Martillo martillo;
     int puntuacion = 0;
@@ -44,6 +52,8 @@ public class GameScreen implements Screen {
         topoTextura = new Texture(Gdx.files.internal("topo.png"));
         topoAplastadoTextura = new Texture(Gdx.files.internal("topoAplastado.png"));
         martilloTextura = new Texture(Gdx.files.internal("martillo.png"));
+        topoBombaTextura = new Texture(Gdx.files.internal("topo_bomba.png"));
+        topoBombaAplastadoTextura = new Texture(Gdx.files.internal("topo_bomba_aplastado.png"));
         font = new BitmapFont();
         font.getData().setScale(Settings.FUENTE_ESCALA_MENU);
         agujeros = new Array<>();
@@ -82,15 +92,38 @@ public class GameScreen implements Screen {
                 for (Agujero agujero : agujeros) {
                     if (agujero.estaVisible() && agujero.contiene(worldX, worldY)) {
                         agujero.aplastarTopo();
-                        puntuacion++;
-                        tiempoRestante += 5f;
+
+                        // Crear el texto flotante
+                        if (agujero.esBomba()) {
+                            tiempoRestante = Math.max(0, tiempoRestante - 1f);
+                            textosFlotantes.add(new TextoFlotante(worldX, worldY, "-1", 1f)); // 1 segundo de duración
+                        } else {
+                            puntuacion++;
+                            tiempoRestante += 2.5f;
+                            textosFlotantes.add(new TextoFlotante(worldX, worldY, "+2.5", 1f)); // 1 segundo de duración
+
+                            if (puntuacion >= 60) {
+                                juegoActivo = false;
+                                game.setScreen(new WinScreen(game));
+                                dispose();
+                                return true;
+                            }
+
+                            if (puntuacion % 10 == 0 && puntuacion > ultimoNivelAcelerado && (puntuacion / 10) <= 5) {
+                                tiempoEntreApariciones *= 0.95f;
+                                ultimoNivelAcelerado = puntuacion;
+                            }
+                        }
+
                         martillo.mostrar(worldX, worldY);
                         return true;
                     }
                 }
                 return false;
             }
+
         });
+
     }
 
     private void inicializarCoordenadas() {
@@ -129,37 +162,55 @@ public class GameScreen implements Screen {
         game.batch.draw(fondoTextura, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         for (Agujero agujero : agujeros) agujero.render(game.batch);
-
         martillo.render(game.batch);
 
-        font.getData().setScale(Settings.FUENTE_ESCALA_JUEGO);        GlyphLayout layout = new GlyphLayout(font, "Puntuación: " + puntuacion);
+        font.getData().setScale(Settings.FUENTE_ESCALA_JUEGO);
+        GlyphLayout layout = new GlyphLayout(font, "Puntuación: " + puntuacion);
         font.draw(game.batch, layout, (Gdx.graphics.getWidth() - layout.width) / 2f, Gdx.graphics.getHeight() * 0.85f);
         GlyphLayout tiempoLayout = new GlyphLayout(font, "Tiempo: " + (int)tiempoRestante);
         font.draw(game.batch, tiempoLayout, (Gdx.graphics.getWidth() - tiempoLayout.width) / 2f, Gdx.graphics.getHeight() * 0.9f);
 
+        // Renderiza los textos flotantes
+        for (TextoFlotante texto : textosFlotantes) {
+            texto.actualizar(delta);
+            texto.render(game.batch, font);
+        }
+
+        // Elimina los textos flotantes que han terminado su vida
+        textosFlotantes.removeIf(texto -> !texto.estaVivo());
+
         game.batch.end();
+
         if (juegoActivo) {
             tiempoRestante -= delta;
             if (tiempoRestante <= 0) {
                 tiempoRestante = 0;
                 juegoActivo = false;
                 for (Agujero a : agujeros) a.ocultarTopo();
-                // Transición a GameOverScreen
                 game.setScreen(new GameOverScreen(game));
                 dispose();
             }
         }
 
-
         if (juegoActivo && TimeUtils.nanoTime() - ultimoTiempoAparicion > tiempoEntreApariciones * 1_000_000_000L) {
             ultimoTiempoAparicion = TimeUtils.nanoTime();
             for (Agujero a : agujeros) a.ocultarTopo();
             agujeroActivo = agujeros.get(random.nextInt(agujeros.size));
+
+            // 20% de probabilidad de ser topo bomba
+            boolean esBomba = random.nextFloat() < 0.2f;
+            if (esBomba) {
+                agujeroActivo.configurarTipo(true, topoBombaTextura, topoBombaAplastadoTextura);
+            } else {
+                agujeroActivo.configurarTipo(false, topoTextura, topoAplastadoTextura);
+            }
+
             agujeroActivo.mostrarTopo();
         }
 
         if (agujeroActivo != null && agujeroActivo.expirado()) agujeroActivo.ocultarTopo();
     }
+
 
     @Override public void resize(int w, int h) {}
     @Override public void show() {}
@@ -174,5 +225,7 @@ public class GameScreen implements Screen {
         topoAplastadoTextura.dispose();
         martilloTextura.dispose();
         font.dispose();
+        topoBombaTextura.dispose();
+        topoBombaAplastadoTextura.dispose();
     }
 }

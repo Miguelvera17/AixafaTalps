@@ -31,7 +31,7 @@ public class PressStartScreen implements Screen {
         layout = new GlyphLayout();
 
         // Intentar cargar la música de fondo
-        FileHandle file = Gdx.files.internal("sounds/Afterburner.ogg");
+        FileHandle file = Gdx.files.internal("sounds/intro.ogg");
         if (file.exists()) {
             Gdx.app.log("Music", "Archivo de música encontrado.");
             musicaFondo = Gdx.audio.newMusic(file);
