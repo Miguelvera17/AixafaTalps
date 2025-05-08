@@ -43,7 +43,7 @@ public class Agujero {
         aplastado = false;
         tiempoVisible = TimeUtils.nanoTime();
         tiempoAparecer = tiempoVisible;
-        alpha = 0f;  // ← Comenzar con opacidad 0
+        alpha = 0f;
     }
 
     public void ocultarTopo() {
