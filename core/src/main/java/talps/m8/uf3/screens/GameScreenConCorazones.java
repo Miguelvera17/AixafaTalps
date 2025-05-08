@@ -1,6 +1,7 @@
 package talps.m8.uf3.screens;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.utils.*;
@@ -25,7 +26,8 @@ public class GameScreenConCorazones implements Screen {
     Texture topoCorazonAplastadoTextura;
     Texture corazonTextura;
     int nivel = 1;
-
+    Sound hammerSound;
+    Sound smashSound;
 
     Array<Agujero> agujeros;
     List<TextoFlotante> textosFlotantes = new ArrayList<>();
@@ -58,11 +60,12 @@ public class GameScreenConCorazones implements Screen {
         topoCorazonTextura = new Texture(Gdx.files.internal("topo_corazon.png"));
         topoCorazonAplastadoTextura = new Texture(Gdx.files.internal("topo_corazon_aplastado.png"));
         corazonTextura = new Texture(Gdx.files.internal("corazon.png"));
-
+        hammerSound = Gdx.audio.newSound(Gdx.files.internal("sounds/hammer.wav"));
+        smashSound = Gdx.audio.newSound(Gdx.files.internal("sounds/smash.wav"));
         font = new BitmapFont();
         font.getData().setScale(Settings.FUENTE_ESCALA_MENU);
         agujeros = new Array<>();
-        martillo = new Martillo(martilloTextura);
+        martillo = new Martillo(martilloTextura, hammerSound);
         inicializarCoordenadas();
 
         float anchoPantalla = Gdx.graphics.getWidth();
@@ -81,7 +84,7 @@ public class GameScreenConCorazones implements Screen {
                 String clave = (fila + 1) + "-" + (col + 1);
                 float[] coords = coordenadasConocidas.getOrDefault(clave,
                     new float[]{(col + 0.5f) * anchoCelda, altoPantalla - ((fila + 0.5f) * altoCelda)});
-                agujeros.add(new Agujero(coords[0], coords[1], anchoCelda, altoCelda, topoTextura, topoAplastadoTextura));
+                agujeros.add(new Agujero(coords[0], coords[1], anchoCelda, altoCelda, topoTextura, topoAplastadoTextura, smashSound));
             }
         }
 
@@ -265,8 +268,15 @@ public class GameScreenConCorazones implements Screen {
         topoCorazonTextura.dispose();
         topoCorazonAplastadoTextura.dispose();
         corazonTextura.dispose();
+        if (hammerSound != null) {
+            hammerSound.dispose();
+        }
+        if (smashSound != null) {
+            smashSound.dispose();
+        }
     }
 
     @Override
     public void show() {}
+
 }

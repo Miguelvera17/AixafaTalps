@@ -4,12 +4,10 @@ import com.badlogic.gdx.*;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.utils.ScreenUtils;
-
-import talps.m8.uf3.AixafaTalps;
-
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 
-import com.badlogic.gdx.audio.Music;
+import talps.m8.uf3.AixafaTalps;
 
 public class GameOverScreen implements Screen {
     final AixafaTalps game;
@@ -17,6 +15,7 @@ public class GameOverScreen implements Screen {
     BitmapFont font;
     GlyphLayout layout;
     Music introMusic;
+    Sound loseSound;
 
     float blinkAlpha = 1f;
     float blinkTimer = 0f;
@@ -27,19 +26,23 @@ public class GameOverScreen implements Screen {
         fondoTextura = new Texture(Gdx.files.internal("fondo.png"));
 
         font = new BitmapFont();
-        font.getData().setScale(6); // Tamaño muy grande
-        font.setColor(1, 0, 0, blinkAlpha); // Rojo parpadeante
+        font.getData().setScale(6);
+        font.setColor(1, 0, 0, blinkAlpha);
 
         layout = new GlyphLayout();
 
+        // Música de fondo
         introMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/intro2.ogg"));
-        introMusic.setLooping(true); // Opcional: haz que la música se repita
-        introMusic.setVolume(0.5f);  // Opcional: ajusta el volumen (0.0 - 1.0)
+//        introMusic.setLooping(true);
+//        introMusic.setVolume(0.5f);
+
+        // Efecto de sonido de perder
+        loseSound = Gdx.audio.newSound(Gdx.files.internal("sounds/GameOver.wav"));
 
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                game.setScreen(new PressStartScreen(game)); // O volver a GameScreen si prefieres
+                game.setScreen(new PressStartScreen(game));
                 dispose();
                 return true;
             }
@@ -48,6 +51,7 @@ public class GameOverScreen implements Screen {
 
     @Override
     public void show() {
+        loseSound.play();  // Sonido de perder al entrar a la pantalla
         introMusic.play();
     }
 
@@ -57,10 +61,9 @@ public class GameOverScreen implements Screen {
 
         blinkTimer += delta;
         blinkAlpha = 0.5f + 0.5f * (float)Math.sin(blinkTimer * 2f);
-        font.setColor(1, 0, 0, blinkAlpha); // Rojo parpadeante
+        font.setColor(1, 0, 0, blinkAlpha);
 
         game.batch.begin();
-
         game.batch.draw(fondoTextura, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         String mensaje = "GAME OVER";
@@ -81,6 +84,7 @@ public class GameOverScreen implements Screen {
     public void dispose() {
         fondoTextura.dispose();
         font.dispose();
-        introMusic.dispose();
+        loseSound.dispose();
+        introMusic.dispose();  // Liberar recurso del sonido
     }
 }

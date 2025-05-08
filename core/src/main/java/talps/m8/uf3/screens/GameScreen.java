@@ -1,6 +1,7 @@
 package talps.m8.uf3.screens;
 
 import com.badlogic.gdx.*;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.utils.*;
@@ -21,6 +22,8 @@ public class GameScreen implements Screen {
     Texture martilloTextura;
     Texture topoBombaTextura;
     Texture topoBombaAplastadoTextura;
+    Sound hammerSound;
+    Sound smashSound;
 
     Array<Agujero> agujeros;
     List<TextoFlotante> textosFlotantes = new ArrayList<>();
@@ -55,8 +58,9 @@ public class GameScreen implements Screen {
         font = new BitmapFont();
         font.getData().setScale(Settings.FUENTE_ESCALA_MENU);
         agujeros = new Array<>();
-
-        martillo = new Martillo(martilloTextura);
+        hammerSound = Gdx.audio.newSound(Gdx.files.internal("sounds/hammer.wav"));
+        smashSound = Gdx.audio.newSound(Gdx.files.internal("sounds/smash.wav"));
+        martillo = new Martillo(martilloTextura, hammerSound);
         inicializarCoordenadas();
 
         float anchoPantalla = Gdx.graphics.getWidth();
@@ -75,7 +79,7 @@ public class GameScreen implements Screen {
                 String clave = (fila + 1) + "-" + (col + 1);
                 float[] coords = coordenadasConocidas.getOrDefault(clave,
                     new float[]{(col + 0.5f) * anchoCelda, altoPantalla - ((fila + 0.5f) * altoCelda)});
-                agujeros.add(new Agujero(coords[0], coords[1], anchoCelda, altoCelda, topoTextura, topoAplastadoTextura));
+                agujeros.add(new Agujero(coords[0], coords[1], anchoCelda, altoCelda, topoTextura, topoAplastadoTextura,smashSound));
             }
         }
 
@@ -247,5 +251,11 @@ public class GameScreen implements Screen {
         font.dispose();
         topoBombaTextura.dispose();
         topoBombaAplastadoTextura.dispose();
+        if (hammerSound != null) {
+            hammerSound.dispose();
+        }
+        if (smashSound != null) {
+            smashSound.dispose();
+        }
     }
 }

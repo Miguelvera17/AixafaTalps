@@ -1,5 +1,6 @@
 package talps.m8.uf3.objects;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -12,8 +13,10 @@ public class Martillo {
     private long tiempoInicio;
     private float angulo = Settings.MARTILLO_ANGULO_INICIAL;
     private final Texture textura;
+    private final Sound sonidoGolpe;
 
-    public Martillo(Texture textura) {
+    public Martillo(Texture textura, Sound sonidoGolpe) {
+        this.sonidoGolpe = sonidoGolpe;
         this.textura = textura;
     }
 
@@ -34,6 +37,9 @@ public class Martillo {
 
         if (tiempo < Settings.MARTILLO_DURACION) {
             angulo = 50f * (tiempo / Settings.MARTILLO_DURACION);
+            if ( sonidoGolpe != null) {
+                sonidoGolpe.play(); // Reproducir con un volumen ligeramente menor (opcional)
+            }
             sprite.setRotation(angulo);
             sprite.draw(batch);
         } else {

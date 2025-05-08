@@ -1,5 +1,6 @@
 package talps.m8.uf3.objects;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -16,6 +17,7 @@ public class Agujero {
     private long tiempoAparecer;
     boolean esBomba;
     private boolean esCorazon = false;
+    private Sound sonidoAplastar;
 
     private float alpha = Settings.ALPHA;
     private final float DURACION_FADE_IN = Settings.DURACION_FADE_IN;
@@ -23,13 +25,14 @@ public class Agujero {
     private Texture topoTextura;
     private Texture topoAplastadoTextura;
 
-    public Agujero(float x, float y, float width, float height, Texture topo, Texture topoAplastado) {
+    public Agujero(float x, float y, float width, float height, Texture topo, Texture topoAplastado, Sound sonidoAplastar) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.topoTextura = topo;
         this.topoAplastadoTextura = topoAplastado;
+        this.sonidoAplastar = sonidoAplastar;
     }
 
     public void mostrarTopo() {
@@ -54,6 +57,9 @@ public class Agujero {
             topoSprite.setTexture(topoAplastadoTextura);
             aplastado = true;
             visible = false;
+            if (sonidoAplastar != null) {
+                sonidoAplastar.play(0.7f); // Reproducir el sonido de aplastar (ajusta el volumen si es necesario)
+            }
         }
     }
 
