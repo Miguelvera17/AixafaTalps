@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -36,12 +37,18 @@ public class PressStartScreen implements Screen {
         Gdx.input.setInputProcessor(stage);
 
         fondoTextura = new Texture(Gdx.files.internal("fondo.png"));
-        modoNormalTextura = new Texture(Gdx.files.internal("timer.png"));
-        modoCorazonesTextura = new Texture(Gdx.files.internal("heart.png"));
+        modoNormalTextura = new Texture(Gdx.files.internal("reloj.png"));
+        modoCorazonesTextura = new Texture(Gdx.files.internal("coraz.png"));
 
-        // Cargar fuente
-        FileHandle fontFile = Gdx.files.internal("fonts/space.fnt"); // Usa tu fuente
-        font = new BitmapFont(fontFile);
+        // Cargar fuente para los textos de los botones
+        FileHandle fontFileBotones = Gdx.files.internal("fonts/space.fnt"); // Usa tu fuente
+        BitmapFont fontBotones = new BitmapFont(fontFileBotones);
+        fontBotones.getData().setScale(Settings.FUENTE_ESCALA_MENU);
+        Label.LabelStyle labelStyle = new Label.LabelStyle(fontBotones, Color.WHITE);
+
+        // Cargar fuente para el título
+        FileHandle fontFileTitulo = Gdx.files.internal("fonts/space.fnt"); // Usa tu fuente
+        font = new BitmapFont(fontFileTitulo);
         font.getData().setScale(Settings.FUENTE_ESCALA_MENU * 1.5f); // Hacer la fuente del título más grande
         font.setColor(Color.WHITE);
         layout = new GlyphLayout();
@@ -56,43 +63,55 @@ public class PressStartScreen implements Screen {
             musicaFondo.play();
         }
 
-        // Crear ImageButtons más grandes
-        float botonAncho = Gdx.graphics.getWidth() * 0.6f; // Ancho del 60% de la pantalla (¡más grande!)
-        float botonAltoNormal = botonAncho * (float)modoNormalTextura.getHeight() / modoNormalTextura.getWidth();
-        float botonAltoCorazones = botonAncho * (float)modoCorazonesTextura.getHeight() / modoCorazonesTextura.getWidth();
-        float espacioEntreBotones = botonAncho * 0.05f; // 5% del ancho del botón como espacio (ajustado para botones más grandes)
+        // Crear ImageButtons
+        float botonAncho = Gdx.graphics.getWidth() * 0.3f; // Ancho base para los iconos
+        float botonAltoNormal = botonAncho * (float) modoNormalTextura.getHeight() / modoNormalTextura.getWidth();
+        float botonAltoCorazones = botonAncho * (float) modoCorazonesTextura.getHeight() / modoCorazonesTextura.getWidth();
+        float espacioEntreBotones = Gdx.graphics.getWidth() * 0.1f;
         float totalAnchoBotones = botonAncho * 2 + espacioEntreBotones;
         float inicioX = (Gdx.graphics.getWidth() - totalAnchoBotones) / 2f;
-        float yPosicion = Gdx.graphics.getHeight() * 0.3f; // Ajustar la posición vertical para botones más grandes
+        float yPosicionBoton = Gdx.graphics.getHeight() * 0.2f; // Ajustar posición vertical de los botones
+        float espacioTextoBoton = 1f; // Espacio entre la imagen y el texto
 
-        ImageButton botonNormal = new ImageButton(new TextureRegionDrawable(modoNormalTextura));
-        botonNormal.setSize(botonAncho, botonAltoNormal);
-        botonNormal.setPosition(inicioX, yPosicion);
-
-        ImageButton botonCorazones = new ImageButton(new TextureRegionDrawable(modoCorazonesTextura));
-        botonCorazones.setSize(botonAncho, botonAltoCorazones);
-        botonCorazones.setPosition(inicioX + botonAncho + espacioEntreBotones, yPosicion);
-
-        // Añadir Listeners para los botones
-        botonNormal.addListener(new ClickListener() {
+        // Botón Modo Tiempo
+        ImageButton botonTiempo = new ImageButton(new TextureRegionDrawable(modoNormalTextura));
+        botonTiempo.setSize(botonAncho, botonAltoNormal);
+        botonTiempo.setPosition(inicioX, yPosicionBoton);
+        botonTiempo.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                Gdx.app.log("PressStartScreen", "Botón Modo Tiempo presionado");
                 game.setScreen(new GameScreen(game));
                 dispose();
             }
         });
 
-        botonCorazones.addListener(new ClickListener() {
+        Label textoTiempo = new Label("Modo Tiempo", labelStyle);
+        textoTiempo.setPosition(botonTiempo.getX() + (botonTiempo.getWidth() - textoTiempo.getWidth()) / 2f,
+            botonTiempo.getY() - espacioTextoBoton);
+
+        // Botón Modo Vidas
+        ImageButton botonVidas = new ImageButton(new TextureRegionDrawable(modoCorazonesTextura));
+        botonVidas.setSize(botonAncho, botonAltoCorazones);
+        botonVidas.setPosition(inicioX + botonAncho + espacioEntreBotones, yPosicionBoton);
+        botonVidas.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                Gdx.app.log("PressStartScreen", "Botón Modo Vidas presionado");
                 game.setScreen(new GameScreenConCorazones(game));
                 dispose();
             }
         });
 
-        // Añadir los botones al Stage
-        stage.addActor(botonNormal);
-        stage.addActor(botonCorazones);
+        Label textoVidas = new Label("Modo Vidas", labelStyle);
+        textoVidas.setPosition(botonVidas.getX() + (botonVidas.getWidth() - textoVidas.getWidth()) / 2f,
+            botonVidas.getY() - espacioTextoBoton);
+
+        // Añadir al Stage
+        stage.addActor(botonTiempo);
+        stage.addActor(textoTiempo);
+        stage.addActor(botonVidas);
+        stage.addActor(textoVidas);
     }
 
     @Override
