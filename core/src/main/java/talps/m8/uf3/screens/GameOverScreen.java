@@ -32,9 +32,9 @@ public class GameOverScreen implements Screen {
         layout = new GlyphLayout();
 
         // Música de fondo
-        introMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/intro2.ogg"));
-//        introMusic.setLooping(true);
-//        introMusic.setVolume(0.5f);
+        introMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/sad-ham.wav"));
+        introMusic.setLooping(true);
+        introMusic.setVolume(0.5f);
 
         // Efecto de sonido de perder
         loseSound = Gdx.audio.newSound(Gdx.files.internal("sounds/GameOver.wav"));

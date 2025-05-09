@@ -22,8 +22,9 @@ public class GameScreen implements Screen {
     Texture martilloTextura;
     Texture topoBombaTextura;
     Texture topoBombaAplastadoTextura;
-    Sound hammerSound;
+    Sound laughSound;
     Sound smashSound;
+    Sound explosionSound;
 
     Array<Agujero> agujeros;
     List<TextoFlotante> textosFlotantes = new ArrayList<>();
@@ -58,9 +59,10 @@ public class GameScreen implements Screen {
         font = new BitmapFont();
         font.getData().setScale(Settings.FUENTE_ESCALA_MENU);
         agujeros = new Array<>();
-        hammerSound = Gdx.audio.newSound(Gdx.files.internal("sounds/hammer.wav"));
         smashSound = Gdx.audio.newSound(Gdx.files.internal("sounds/smash.wav"));
-        martillo = new Martillo(martilloTextura, hammerSound);
+        explosionSound = Gdx.audio.newSound(Gdx.files.internal("sounds/explode1.wav"));
+        laughSound = Gdx.audio.newSound(Gdx.files.internal("sounds/laugh.wav"));
+        martillo = new Martillo(martilloTextura);
         inicializarCoordenadas();
 
         float anchoPantalla = Gdx.graphics.getWidth();
@@ -79,12 +81,11 @@ public class GameScreen implements Screen {
                 String clave = (fila + 1) + "-" + (col + 1);
                 float[] coords = coordenadasConocidas.getOrDefault(clave,
                     new float[]{(col + 0.5f) * anchoCelda, altoPantalla - ((fila + 0.5f) * altoCelda)});
-                agujeros.add(new Agujero(coords[0], coords[1], anchoCelda, altoCelda, topoTextura, topoAplastadoTextura,smashSound));
+                agujeros.add(new Agujero(coords[0], coords[1], anchoCelda, altoCelda, topoTextura, topoAplastadoTextura, laughSound)); // Pasar explosionSound
             }
         }
 
         Gdx.input.setInputProcessor(new InputAdapter() {
-            @Override
             public boolean touchDown(int x, int y, int pointer, int button) {
                 float worldX = x;
                 float worldY = Gdx.graphics.getHeight() - y;
@@ -94,6 +95,10 @@ public class GameScreen implements Screen {
                         agujero.aplastarTopo();
 
                         if (agujero.esBomba()) {
+                            if (explosionSound != null) {
+                                smashSound.stop();
+                                explosionSound.play(0.5f);
+                            }
                             float penalizacion = 1f;
                             if (puntuacion > 0 && puntuacion % 20 == 0) {
                                 penalizacion += 3f;
@@ -101,6 +106,10 @@ public class GameScreen implements Screen {
                             tiempoRestante = Math.max(0, tiempoRestante - penalizacion);
                             textosFlotantes.add(new TextoFlotante(worldX, worldY, "-" + penalizacion, 1f));
                         } else {
+                            if (smashSound != null) {
+                                explosionSound.stop();
+                                smashSound.play(1.0f);
+                            }
                             puntuacion++;
                             tiempoRestante += 2.5f;
                             textosFlotantes.add(new TextoFlotante(worldX, worldY, "+2.5", 1f));
@@ -125,10 +134,10 @@ public class GameScreen implements Screen {
                         }
 
                         martillo.mostrar(worldX, worldY);
-                        return true;
+                        return true; // Importante: Sale del bucle después de golpear un topo
                     }
                 }
-                return false;
+                return false; // No se golpeó ningún topo visible
             }
         });
     }
@@ -251,11 +260,14 @@ public class GameScreen implements Screen {
         font.dispose();
         topoBombaTextura.dispose();
         topoBombaAplastadoTextura.dispose();
-        if (hammerSound != null) {
-            hammerSound.dispose();
-        }
         if (smashSound != null) {
             smashSound.dispose();
+        }
+        if (explosionSound != null) {
+            explosionSound.dispose();
+        }
+        if (laughSound != null) {
+            laughSound.dispose();
         }
     }
 }

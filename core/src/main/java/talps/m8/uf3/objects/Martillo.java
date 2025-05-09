@@ -13,10 +13,8 @@ public class Martillo {
     private long tiempoInicio;
     private float angulo = Settings.MARTILLO_ANGULO_INICIAL;
     private final Texture textura;
-    private final Sound sonidoGolpe;
 
-    public Martillo(Texture textura, Sound sonidoGolpe) {
-        this.sonidoGolpe = sonidoGolpe;
+    public Martillo(Texture textura) {
         this.textura = textura;
     }
 
@@ -37,9 +35,6 @@ public class Martillo {
 
         if (tiempo < Settings.MARTILLO_DURACION) {
             angulo = 50f * (tiempo / Settings.MARTILLO_DURACION);
-            if ( sonidoGolpe != null) {
-                sonidoGolpe.play(); // Reproducir con un volumen ligeramente menor (opcional)
-            }
             sprite.setRotation(angulo);
             sprite.draw(batch);
         } else {

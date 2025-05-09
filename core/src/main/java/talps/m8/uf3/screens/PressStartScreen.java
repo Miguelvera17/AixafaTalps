@@ -1,39 +1,54 @@
 package talps.m8.uf3.screens;
 
-import com.badlogic.gdx.*;
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.*;
-import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.files.FileHandle;
+
 import talps.m8.uf3.AixafaTalps;
+import talps.m8.uf3.utils.Settings; // Asegúrate de que tienes esta clase
 
 public class PressStartScreen implements Screen {
     final AixafaTalps game;
-    Texture fondoTextura;
-    BitmapFont font;
-    GlyphLayout layout;
-    Music musicaFondo;
-
-    float blinkAlpha = 1f;
-    float blinkTimer = 0f;
-
-    // Posiciones para cada texto
-    Rectangle rectTimeTrial, rectHeartsMode;
+    private Stage stage;
+    private Texture fondoTextura;
+    private Texture modoNormalTextura;
+    private Texture modoCorazonesTextura;
+    private Music musicaFondo;
+    private BitmapFont font;
+    private GlyphLayout layout;
+    private String textoTitulo = "Escoge el modo de juego";
 
     public PressStartScreen(final AixafaTalps game) {
         this.game = game;
+        stage = new Stage(new FitViewport(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()), game.batch);
+        Gdx.input.setInputProcessor(stage);
 
         fondoTextura = new Texture(Gdx.files.internal("fondo.png"));
+        modoNormalTextura = new Texture(Gdx.files.internal("timer.png"));
+        modoCorazonesTextura = new Texture(Gdx.files.internal("heart.png"));
 
-        // Carga la fuente BitmapFont personalizada
-        FileHandle fontFile = Gdx.files.internal("fonts/space.fnt");
+        // Cargar fuente
+        FileHandle fontFile = Gdx.files.internal("fonts/space.fnt"); // Usa tu fuente
         font = new BitmapFont(fontFile);
-        font.getData().setScale(4);  // Escala el tamaño de la fuente
+        font.getData().setScale(Settings.FUENTE_ESCALA_MENU * 1.5f); // Hacer la fuente del título más grande
+        font.setColor(Color.WHITE);
         layout = new GlyphLayout();
+        layout.setText(font, textoTitulo);
 
-        FileHandle file = Gdx.files.internal("sounds/intro.ogg");
+        // Cargar música de fondo
+        FileHandle file = Gdx.files.internal("sounds/danger.wav");
         if (file.exists()) {
             musicaFondo = Gdx.audio.newMusic(file);
             musicaFondo.setLooping(true);
@@ -41,64 +56,93 @@ public class PressStartScreen implements Screen {
             musicaFondo.play();
         }
 
-        Gdx.input.setInputProcessor(new InputAdapter() {
+        // Crear ImageButtons más grandes
+        float botonAncho = Gdx.graphics.getWidth() * 0.6f; // Ancho del 60% de la pantalla (¡más grande!)
+        float botonAltoNormal = botonAncho * (float)modoNormalTextura.getHeight() / modoNormalTextura.getWidth();
+        float botonAltoCorazones = botonAncho * (float)modoCorazonesTextura.getHeight() / modoCorazonesTextura.getWidth();
+        float espacioEntreBotones = botonAncho * 0.05f; // 5% del ancho del botón como espacio (ajustado para botones más grandes)
+        float totalAnchoBotones = botonAncho * 2 + espacioEntreBotones;
+        float inicioX = (Gdx.graphics.getWidth() - totalAnchoBotones) / 2f;
+        float yPosicion = Gdx.graphics.getHeight() * 0.3f; // Ajustar la posición vertical para botones más grandes
+
+        ImageButton botonNormal = new ImageButton(new TextureRegionDrawable(modoNormalTextura));
+        botonNormal.setSize(botonAncho, botonAltoNormal);
+        botonNormal.setPosition(inicioX, yPosicion);
+
+        ImageButton botonCorazones = new ImageButton(new TextureRegionDrawable(modoCorazonesTextura));
+        botonCorazones.setSize(botonAncho, botonAltoCorazones);
+        botonCorazones.setPosition(inicioX + botonAncho + espacioEntreBotones, yPosicion);
+
+        // Añadir Listeners para los botones
+        botonNormal.addListener(new ClickListener() {
             @Override
-            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                float x = screenX;
-                float y = Gdx.graphics.getHeight() - screenY;
-
-                if (rectTimeTrial.contains(x, y)) {
-                    game.setScreen(new GameScreen(game));
-                    dispose();
-                } else if (rectHeartsMode.contains(x, y)) {
-                    game.setScreen(new GameScreenConCorazones(game));
-                    dispose();
-                }
-
-                return true;
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GameScreen(game));
+                dispose();
             }
         });
+
+        botonCorazones.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new GameScreenConCorazones(game));
+                dispose();
+            }
+        });
+
+        // Añadir los botones al Stage
+        stage.addActor(botonNormal);
+        stage.addActor(botonCorazones);
+    }
+
+    @Override
+    public void show() {
+        Gdx.input.setInputProcessor(stage);
+        if (musicaFondo != null) musicaFondo.play();
     }
 
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
-        blinkTimer += delta;
-        blinkAlpha = 0.5f + 0.5f * (float) Math.sin(blinkTimer * 2f);
-        font.setColor(1, 1, 1, blinkAlpha);
 
-        game.batch.begin();
-        game.batch.draw(fondoTextura, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        stage.act(Math.min(Gdx.graphics.getDeltaTime(), 1 / 30f));
+        stage.getBatch().begin();
+        stage.getBatch().draw(fondoTextura, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-        // Texto 1 - Time Trial
-        String texto1 = "Press to start Time Trial Mode";
-        layout.setText(font, texto1);
-        float x1 = (Gdx.graphics.getWidth() - layout.width) / 2f;
-        float y1 = Gdx.graphics.getHeight() * 0.5f + layout.height;
-        font.draw(game.batch, layout, x1, y1);
-        rectTimeTrial = new Rectangle(x1, y1 - layout.height, layout.width, layout.height);
+        // Dibujar el texto del título en la parte superior
+        font.draw(stage.getBatch(), layout, (Gdx.graphics.getWidth() - layout.width) / 2f, Gdx.graphics.getHeight() * 0.85f);
 
-        // Texto 2 - Hearts Mode
-        String texto2 = "Press to start Hearts Mode";
-        layout.setText(font, texto2);
-        float x2 = (Gdx.graphics.getWidth() - layout.width) / 2f;
-        float y2 = Gdx.graphics.getHeight() * 0.5f - layout.height * 2;
-        font.draw(game.batch, layout, x2, y2);
-        rectHeartsMode = new Rectangle(x2, y2 - layout.height, layout.width, layout.height);
-
-        game.batch.end();
+        stage.getBatch().end();
+        stage.draw();
     }
 
-    @Override public void show() {}
-    @Override public void resize(int width, int height) {}
-    @Override public void pause() {}
-    @Override public void resume() {}
-    @Override public void hide() {}
+    @Override
+    public void resize(int width, int height) {
+        stage.getViewport().update(width, height, true);
+    }
+
+    @Override
+    public void pause() {
+        if (musicaFondo != null) musicaFondo.pause();
+    }
+
+    @Override
+    public void resume() {
+        if (musicaFondo != null) musicaFondo.play();
+    }
+
+    @Override
+    public void hide() {
+        if (musicaFondo != null) musicaFondo.pause();
+    }
 
     @Override
     public void dispose() {
+        stage.dispose();
         fondoTextura.dispose();
-        font.dispose();
+        modoNormalTextura.dispose();
+        modoCorazonesTextura.dispose();
         if (musicaFondo != null) musicaFondo.dispose();
+        if (font != null) font.dispose();
     }
 }

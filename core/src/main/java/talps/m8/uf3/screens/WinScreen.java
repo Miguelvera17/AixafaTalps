@@ -25,9 +25,9 @@ public class WinScreen implements Screen {
         font.getData().setScale(3f);
 
         // Cargar música de victoria
-        victoryMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/marioWin.mp3"));
-        victoryMusic.setLooping(false);
-        victoryMusic.play();
+//        victoryMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/marioWin.mp3"));
+//        victoryMusic.setLooping(false);
+//        victoryMusic.play();
     }
 
     @Override

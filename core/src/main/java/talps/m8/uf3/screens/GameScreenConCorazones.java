@@ -27,7 +27,10 @@ public class GameScreenConCorazones implements Screen {
     Texture corazonTextura;
     int nivel = 1;
     Sound hammerSound;
+    Sound laughSound;
     Sound smashSound;
+    Sound life;
+    Sound explosionSound;
 
     Array<Agujero> agujeros;
     List<TextoFlotante> textosFlotantes = new ArrayList<>();
@@ -59,14 +62,17 @@ public class GameScreenConCorazones implements Screen {
         topoBombaAplastadoTextura = new Texture(Gdx.files.internal("topo_bomba_aplastado.png"));
         topoCorazonTextura = new Texture(Gdx.files.internal("topo_corazon.png"));
         topoCorazonAplastadoTextura = new Texture(Gdx.files.internal("topo_corazon_aplastado.png"));
-        corazonTextura = new Texture(Gdx.files.internal("corazon.png"));
-        hammerSound = Gdx.audio.newSound(Gdx.files.internal("sounds/hammer.wav"));
         smashSound = Gdx.audio.newSound(Gdx.files.internal("sounds/smash.wav"));
+        corazonTextura = new Texture(Gdx.files.internal("corazon.png"));
         font = new BitmapFont();
         font.getData().setScale(Settings.FUENTE_ESCALA_MENU);
         agujeros = new Array<>();
-        martillo = new Martillo(martilloTextura, hammerSound);
+        explosionSound = Gdx.audio.newSound(Gdx.files.internal("sounds/explode1.wav"));
+        laughSound = Gdx.audio.newSound(Gdx.files.internal("sounds/laugh.wav"));
+        life = Gdx.audio.newSound(Gdx.files.internal("sounds/coin.wav"));
         inicializarCoordenadas();
+
+        martillo = new Martillo(martilloTextura);
 
         float anchoPantalla = Gdx.graphics.getWidth();
         float altoPantalla = Gdx.graphics.getHeight();
@@ -84,7 +90,7 @@ public class GameScreenConCorazones implements Screen {
                 String clave = (fila + 1) + "-" + (col + 1);
                 float[] coords = coordenadasConocidas.getOrDefault(clave,
                     new float[]{(col + 0.5f) * anchoCelda, altoPantalla - ((fila + 0.5f) * altoCelda)});
-                agujeros.add(new Agujero(coords[0], coords[1], anchoCelda, altoCelda, topoTextura, topoAplastadoTextura, smashSound));
+                agujeros.add(new Agujero(coords[0], coords[1], anchoCelda, altoCelda, topoTextura, topoAplastadoTextura, laughSound));
             }
         }
 
@@ -99,12 +105,27 @@ public class GameScreenConCorazones implements Screen {
                         agujero.aplastarTopo();
 
                         if (agujero.esBomba()) {
+                            if (explosionSound != null) {
+                                smashSound.stop();
+                                life.stop();
+                                explosionSound.play(0.5f);
+                            }
                             corazones--;
                             textosFlotantes.add(new TextoFlotante(worldX, worldY, "-1", 1f));
                         } else if (agujero.esCorazon()) {
+                            if (life != null) {
+                                smashSound.stop();
+                                explosionSound.stop();
+                                life.play(0.5f);
+                            }
                             corazones++;
                             textosFlotantes.add(new TextoFlotante(worldX, worldY, "+1", 1f));
                         } else {
+                            if (smashSound != null) {
+                                explosionSound.stop();
+                                life.stop();
+                                smashSound.play(1.0f);
+                            }
                             puntuacion++;
                             textosFlotantes.add(new TextoFlotante(worldX, worldY, "", 1f));
                             int nuevoNivel = (puntuacion / 20) + 1;
@@ -178,7 +199,7 @@ public class GameScreenConCorazones implements Screen {
             if (agujero.expirado()) {
                 if (!agujero.esBomba()) {
                     corazones--;
-                    textosFlotantes.add(new TextoFlotante(agujero.getX(), agujero.getY(), "-1 ❤", 1f));
+                    textosFlotantes.add(new TextoFlotante(agujero.getX(), agujero.getY(), "-1 <3", 1f));
                     if (corazones <= 0) {
                         juegoActivo = false;
                         game.setScreen(new GameOverScreen(game));
@@ -268,11 +289,17 @@ public class GameScreenConCorazones implements Screen {
         topoCorazonTextura.dispose();
         topoCorazonAplastadoTextura.dispose();
         corazonTextura.dispose();
-        if (hammerSound != null) {
-            hammerSound.dispose();
+        if (explosionSound != null) {
+            explosionSound.dispose();
         }
         if (smashSound != null) {
             smashSound.dispose();
+        }
+        if (laughSound != null) {
+            laughSound.dispose();
+        }
+        if (life != null) {
+            life.dispose();
         }
     }
 

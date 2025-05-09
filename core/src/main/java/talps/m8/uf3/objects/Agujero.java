@@ -1,5 +1,6 @@
 package talps.m8.uf3.objects;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -17,22 +18,21 @@ public class Agujero {
     private long tiempoAparecer;
     boolean esBomba;
     private boolean esCorazon = false;
-    private Sound sonidoAplastar;
-
     private float alpha = Settings.ALPHA;
     private final float DURACION_FADE_IN = Settings.DURACION_FADE_IN;
 
+    private Sound laugh;
     private Texture topoTextura;
     private Texture topoAplastadoTextura;
 
-    public Agujero(float x, float y, float width, float height, Texture topo, Texture topoAplastado, Sound sonidoAplastar) {
+    public Agujero(float x, float y, float width, float height, Texture topo, Texture topoAplastado, Sound laugh) {
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
         this.topoTextura = topo;
         this.topoAplastadoTextura = topoAplastado;
-        this.sonidoAplastar = sonidoAplastar;
+        this.laugh = laugh;
     }
 
     public void mostrarTopo() {
@@ -57,9 +57,6 @@ public class Agujero {
             topoSprite.setTexture(topoAplastadoTextura);
             aplastado = true;
             visible = false;
-            if (sonidoAplastar != null) {
-                sonidoAplastar.play(0.7f); // Reproducir el sonido de aplastar (ajusta el volumen si es necesario)
-            }
         }
     }
 
@@ -85,6 +82,10 @@ public class Agujero {
     }
 
     public boolean expirado() {
+        if (visible && (TimeUtils.nanoTime() - tiempoVisible > Settings.TOPO_DURACION_VISIBLE * 1_000_000_000L) && !aplastado && laugh != null) {
+            laugh.play(1.0f); // Reproducir risa si expira sin ser aplastado
+            return true;
+        }
         return visible && (TimeUtils.nanoTime() - tiempoVisible > Settings.TOPO_DURACION_VISIBLE * 1_000_000_000L);
     }
 
